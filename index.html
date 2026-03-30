@@ -1,156 +1,58 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<title>Training Tracker</title>
-
-<style>
-body {
-    font-family: Arial;
-    background: #f1f3f6;
-    padding: 20px;
-}
-
-.container {
-    background: #fff;
-    padding: 25px;
-    border-radius: 10px;
-    max-width: 900px;
-    margin: auto;
-}
-
-h2 {
-    text-align: center;
-    color: #2874f0;
-}
-
-/* DROPDOWN */
-select {
-    padding: 10px;
-    width: 100%;
-    margin-bottom: 20px;
-}
-
-/* TRACKER */
-.tracker {
-    display: flex;
-    justify-content: space-between;
-    position: relative;
-    margin-top: 40px;
-}
-
-/* LINE */
-.tracker::before {
-    content: '';
-    position: absolute;
-    top: 20px;
-    left: 5%;
-    right: 5%;
-    height: 4px;
-    background: #ccc;
-    z-index: 0;
-}
-
-/* STEP */
-.step {
-    text-align: center;
-    width: 100%;
-    position: relative;
-    z-index: 1;
-}
-
-/* CIRCLE */
-.circle {
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    background: #ccc;
-    margin: auto;
-    line-height: 40px;
-    color: white;
-    font-weight: bold;
-}
-
-/* STATES */
-.completed .circle {
-    background: #4caf50;
-}
-
-.active .circle {
-    background: #2874f0;
-}
-
-/* LABEL */
-.label {
-    margin-top: 10px;
-    font-size: 13px;
-}
-</style>
-</head>
-
-<body>
-
-<div class="container">
-    <h2>Training Tracker</h2>
-
-    <!-- DROPDOWN -->
-    <select id="stage" onchange="updateTracker()">
-        <option value="0">Arrived</option>
-        <option value="1">Documentation</option>
-        <option value="2">OHC</option>
-        <option value="3">Safety Induction</option>
-        <option value="4">DOJO Training</option>
-        <option value="5">Waiting Deployment</option>
-        <option value="6">Deployed</option>
-    </select>
-
-    <!-- TRACKER -->
-    <div class="tracker">
-        <div class="step"><div class="circle">1</div><div class="label">Arrived</div></div>
-        <div class="step"><div class="circle">2</div><div class="label">Documentation</div></div>
-        <div class="step"><div class="circle">3</div><div class="label">OHC</div></div>
-        <div class="step"><div class="circle">4</div><div class="label">Safety</div></div>
-        <div class="step"><div class="circle">5</div><div class="label">DOJO</div></div>
-        <div class="step"><div class="circle">6</div><div class="label">Waiting</div></div>
-        <div class="step"><div class="circle">7</div><div class="label">Deployed</div></div>
-    </div>
-</div>
-
-<!-- FIREBASE -->
-<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
-
 <script>
-// 🔥 REPLACE THIS WITH YOUR FIREBASE CONFIG
+// 🔥 YOUR FIREBASE CONFIG (MUST BE CORRECT)
 var firebaseConfig = {
     apiKey: "YOUR_API_KEY",
     authDomain: "YOUR_PROJECT.firebaseapp.com",
-    databaseURL: "https://YOUR_PROJECT.firebaseio.com",
+    databaseURL: "https://YOUR_PROJECT-default-rtdb.firebaseio.com/", 
     projectId: "YOUR_PROJECT",
 };
 
-// INIT
+// INIT FIREBASE
 firebase.initializeApp(firebaseConfig);
 var db = firebase.database();
 
-// UPDATE DATA
+let isLoaded = false;
+
+// LOAD DATA FIRST
+window.onload = function () {
+
+    db.ref("training/stage").once("value").then(function(snapshot) {
+
+        let stage = snapshot.val();
+
+        if (stage === null) {
+            stage = 0;
+            db.ref("training/stage").set(0);
+        }
+
+        document.getElementById("stage").value = stage;
+        updateUI(stage);
+
+        isLoaded = true;
+
+    });
+
+    // REAL-TIME UPDATE (for others)
+    db.ref("training/stage").on("value", function(snapshot) {
+
+        let stage = snapshot.val();
+        if (stage === null) return;
+
+        document.getElementById("stage").value = stage;
+        updateUI(stage);
+    });
+};
+
+// UPDATE FROM DROPDOWN
 function updateTracker() {
+    if (!isLoaded) return;
+
     let stage = document.getElementById("stage").value;
     db.ref("training/stage").set(stage);
 }
 
-// REAL-TIME LISTENER
-db.ref("training/stage").on("value", function(snapshot) {
-
-    let stage = snapshot.val();
-
-    // default value
-    if (stage === null) {
-        stage = 0;
-        db.ref("training/stage").set(0);
-    }
-
-    document.getElementById("stage").value = stage;
+// UI UPDATE FUNCTION
+function updateUI(stage) {
 
     let steps = document.querySelectorAll(".step");
 
@@ -163,9 +65,5 @@ db.ref("training/stage").on("value", function(snapshot) {
             step.classList.add("active");
         }
     });
-
-});
+}
 </script>
-
-</body>
-</html>
