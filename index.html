@@ -5,137 +5,105 @@
 <title>Training Tracker</title>
 
 <style>
-body {
-    font-family: Arial;
-    background: #f1f3f6;
-    padding: 20px;
-}
-
-.container {
-    background: #fff;
-    padding: 25px;
-    border-radius: 10px;
-    max-width: 900px;
-    margin: auto;
-}
-
-h2 {
-    text-align: center;
-    color: #2874f0;
-}
-
-select {
-    padding: 10px;
-    width: 100%;
-    margin-bottom: 20px;
-}
-
-.tracker {
-    display: flex;
-    justify-content: space-between;
-    position: relative;
-    margin-top: 40px;
-}
-
-.tracker::before {
-    content: '';
-    position: absolute;
-    top: 20px;
-    left: 5%;
-    right: 5%;
-    height: 4px;
-    background: #ccc;
-}
-
-.step {
-    text-align: center;
-    width: 100%;
-}
-
-.circle {
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    background: #ccc;
-    margin: auto;
-    line-height: 40px;
-    color: white;
-    font-weight: bold;
-}
-
-.completed .circle {
-    background: #4caf50;
-}
-
-.active .circle {
-    background: #2874f0;
-}
-
-.label {
-    margin-top: 10px;
-    font-size: 13px;
-}
+body { font-family: Arial; background: #f1f3f6; padding: 20px; }
+.container { background: #fff; padding: 25px; border-radius: 10px; max-width: 900px; margin: auto; }
+select, input { padding: 10px; width: 100%; margin-bottom: 15px; }
+.tracker { display: flex; justify-content: space-between; margin-top: 30px; }
+.step { text-align: center; width: 100%; }
+.circle { width: 40px; height: 40px; border-radius: 50%; background: #ccc; margin: auto; line-height: 40px; color: white; }
+.completed .circle { background: #4caf50; }
+.active .circle { background: #2874f0; }
 </style>
 </head>
 
 <body>
 
 <div class="container">
-    <h2>Training Tracker</h2>
+<h2>Training Tracker</h2>
 
-    <select id="stage">
-        <option value="0">Arrived</option>
-        <option value="1">Documentation</option>
-        <option value="2">OHC</option>
-        <option value="3">Safety Induction</option>
-        <option value="4">DOJO Training</option>
-        <option value="5">Waiting Deployment</option>
-        <option value="6">Deployed</option>
-    </select>
+<input type="text" id="username" placeholder="Enter Your Name">
 
-    <div class="tracker">
-        <div class="step"><div class="circle">1</div><div class="label">Arrived</div></div>
-        <div class="step"><div class="circle">2</div><div class="label">Documentation</div></div>
-        <div class="step"><div class="circle">3</div><div class="label">OHC</div></div>
-        <div class="step"><div class="circle">4</div><div class="label">Safety</div></div>
-        <div class="step"><div class="circle">5</div><div class="label">DOJO</div></div>
-        <div class="step"><div class="circle">6</div><div class="label">Waiting</div></div>
-        <div class="step"><div class="circle">7</div><div class="label">Deployed</div></div>
-    </div>
+<select id="stage">
+<option value="0">Arrived</option>
+<option value="1">Documentation</option>
+<option value="2">OHC</option>
+<option value="3">Safety</option>
+<option value="4">DOJO</option>
+<option value="5">Waiting</option>
+<option value="6">Deployed</option>
+</select>
+
+<div class="tracker">
+<div class="step"><div class="circle">1</div></div>
+<div class="step"><div class="circle">2</div></div>
+<div class="step"><div class="circle">3</div></div>
+<div class="step"><div class="circle">4</div></div>
+<div class="step"><div class="circle">5</div></div>
+<div class="step"><div class="circle">6</div></div>
+<div class="step"><div class="circle">7</div></div>
+</div>
 </div>
 
 <script>
+const username = document.getElementById("username");
 const dropdown = document.getElementById("stage");
 
-// LOAD SAVED VALUE
-let saved = localStorage.getItem("trainingStage");
+// 🔥 LOAD LAST USER + DATA
+window.onload = function () {
 
-if (saved === null) {
-    saved = 0;
+    let lastUser = localStorage.getItem("lastUser");
+
+    if (lastUser) {
+        username.value = lastUser;
+        loadUserData(lastUser);
+    }
+};
+
+// 🔥 LOAD USER DATA
+username.addEventListener("input", function () {
+    let user = this.value.trim();
+    if (user) {
+        localStorage.setItem("lastUser", user);
+        loadUserData(user);
+    }
+});
+
+function loadUserData(user) {
+    let saved = localStorage.getItem("user_" + user);
+
+    if (saved === null) saved = 0;
+
+    dropdown.value = saved;
+    updateUI(saved);
 }
 
-dropdown.value = saved;
-updateUI(saved);
-
-// AUTO SAVE WHEN CHANGED
+// 🔥 SAVE DATA
 dropdown.addEventListener("change", function () {
+
+    let user = username.value.trim();
+
+    if (!user) {
+        alert("Enter name first");
+        return;
+    }
+
     let stage = this.value;
-    localStorage.setItem("trainingStage", stage);
+
+    localStorage.setItem("user_" + user, stage);
+    localStorage.setItem("lastUser", user);
+
     updateUI(stage);
 });
 
-// UPDATE UI
+// UI UPDATE
 function updateUI(stage) {
     let steps = document.querySelectorAll(".step");
 
     steps.forEach((step, index) => {
         step.classList.remove("completed", "active");
 
-        if (index < stage) {
-            step.classList.add("completed");
-        } else if (index == stage) {
-            step.classList.add("active");
-        }
+        if (index < stage) step.classList.add("completed");
+        else if (index == stage) step.classList.add("active");
     });
 }
 </script>
